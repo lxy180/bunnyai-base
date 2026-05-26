@@ -1,0 +1,36 @@
+{
+  "workingDirectory": "",
+  "providers": {
+    "codex": {
+      "command": "codex",
+      "workingDirectory": "",
+      "headlessSubcommand": "exec",
+      "fileAssociation": {
+        "directories": "--add-dir",
+        "images": "--image"
+      }
+    },
+    "claude": {
+      "command": "claude",
+      "workingDirectory": "",
+      "headlessFlag": "--print",
+      "fileAssociation": {
+        "directories": "--add-dir"
+      }
+    },
+    "gemini": {
+      "command": "gemini",
+      "workingDirectory": "",
+      "headlessFlag": "--prompt",
+      "interactivePromptFlag": "--prompt-interactive",
+      "fileAssociation": {
+        "directories": "--include-directories"
+      }
+    }
+  },
+  "rules": {
+    "promptMustNotContainFilePath": true,
+    "promptMustNotContainFileContent": true,
+    "missingAssociatedFilePolicy": "reject"
+  }
+}
