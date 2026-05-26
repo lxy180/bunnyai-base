@@ -1,15 +1,15 @@
-# 产品信息模块参数输入输出规范
+# 产品信息模块功能参数输入与响应规范
 
 ## 适用范围
 
-本文档用于定义 `app/module/product_info` 模块统一的参数输入与输出格式。
+本文档用于定义 `app/module/product_info` 模块统一的功能参数输入与响应格式。
 
 本文档只描述数据结构、字段类型、必填规则和填写约束，不描述具体功能能力、业务流程或代码实现。
 
 ## 基本约定
 
 - 输入使用 JSON object 作为根节点。
-- 输出为 Markdown 文档，必须符合 `app/standard/knowledge-md-format-standard.md`。
+- 响应为 Markdown 文档，必须符合 `app/standard/knowledge-md-format-standard.md`。
 - 字段名使用英文驼峰命名，并与本规范保持一致。
 - 说明性文本必须使用简体中文。
 - 可选数组字段没有数据时使用空数组 `[]`，不使用 `null`。
@@ -160,16 +160,16 @@
 }
 ```
 
-## 产品信息文档输出规范
+## 产品信息文档响应规范
 
-### 输出类型
+### 响应类型
 
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
 | `markdown` | `str` | 是 | 无 | 符合 `app/standard/knowledge-md-format-standard.md` 的 Markdown 文档内容。 |
 | `fileName` | `str` | 是 | 无 | Markdown 文档文件名，必须使用输入字段 `productNameZh` 的值，并以 `.md` 结尾。 |
 
-### Markdown 输出规则
+### Markdown 响应规则
 
 1. 输出文件必须是 `.md` 文件。
 2. Markdown 内容必须符合 `app/standard/knowledge-md-format-standard.md`。
@@ -183,7 +183,7 @@
 10. 表格必须包含表头行和分隔行，每一行的列数必须与表头保持一致。
 11. 列表项内容应保持为单行文本，不在列表项内部嵌套代码块、引用、表格或段落。
 
-### 输出校验规则
+### 响应校验规则
 
 1. Markdown 文档必须能够被 `app/tools/json_to_md/json_to_md.py` 支持的块级结构稳定解析。
 2. Markdown 文档主标题应优先使用输入中的 `productNameZh`。
@@ -215,16 +215,16 @@
 }
 ```
 
-## 产品报告输出规范
+## 产品报告响应规范
 
-### 输出类型
+### 响应类型
 
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
 | `markdown` | `str` | 是 | 无 | 符合 `app/standard/knowledge-md-format-standard.md` 的产品报告 Markdown 文档内容。 |
 | `fileName` | `str` | 是 | 无 | Markdown 文档文件名，格式为 `{中文产品名称}-信息报告-{序号}.md`。 |
 
-### Markdown 输出规则
+### Markdown 响应规则
 
 1. 输出文件必须是 `.md` 文件。
 2. Markdown 内容必须符合 `app/standard/knowledge-md-format-standard.md`。
@@ -240,7 +240,7 @@
 12. 表格必须包含表头行和分隔行，每一行的列数必须与表头保持一致。
 13. 列表项内容应保持为单行文本，不在列表项内部嵌套代码块、引用、表格或段落。
 
-### 输出校验规则
+### 响应校验规则
 
 1. Markdown 文档必须能够被 `app/tools/json_to_md/json_to_md.py` 支持的块级结构稳定解析。
 2. Markdown 文档主标题应包含中文产品名称和报告类型。

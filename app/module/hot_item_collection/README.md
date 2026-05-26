@@ -11,4 +11,4 @@
 | 文件 | 说明 |
 | --- | --- |
 | `config.json` | 模块配置占位文件。 |
-| `parameter-io-standard.md` | 模块参数输入输出规范。 |
+| `function-parameter-response-standard.md` | 模块功能参数输入与响应规范。 |

@@ -76,5 +76,5 @@ python3 -m app.module.ai_cli codex "请根据已关联资料输出实现建议�
 
 - `ai_cli.py`：核心实现。
 - `config.json`：当前支持的 CLI 与文件关联参数映射。
-- `parameter-io-standard.md`：模块输入输出规范。
+- `function-parameter-response-standard.md`：模块功能参数输入与响应规范。
 - `test_ai_cli.py`：命令构造与文件关联规则测试。
