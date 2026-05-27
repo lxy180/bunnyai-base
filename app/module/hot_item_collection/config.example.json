@@ -1,0 +1,30 @@
+{
+  "config_schema_version": 2,
+  "hot_collection": {
+    "phone": "",
+    "password": "",
+    "keyword": "",
+    "country": "马来西亚",
+    "category_path": [
+      "美妆个护",
+      "头部护理与造型",
+      "染发用品"
+    ],
+    "shop_type": "全部",
+    "product_types": [],
+    "product_status": "在售",
+    "creator_conversion_rate_filter": "全部",
+    "total_sales_filter": "全部",
+    "total_gmv_filter": "全部",
+    "sales_7d_filter": "全部",
+    "gmv_7d_filter": "全部",
+    "creator_count_filter": "全部",
+    "commission_rate_filter": "全部",
+    "shipping_method_filter": "全部",
+    "product_limit": 1,
+    "videos_per_product": 1,
+    "show_browser": false,
+    "csv_output_dir": "",
+    "video_output_dir": ""
+  }
+}

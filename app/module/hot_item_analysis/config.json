@@ -1,0 +1,7 @@
+{
+  "analysisCliProvider": "codex",
+  "aiCliConfigPath": "app/module/ai_cli/config.json",
+  "knowledgeOutputDirectory": "knowledge/分析爆款",
+  "executionMode": "headless",
+  "timeoutSeconds": 600
+}

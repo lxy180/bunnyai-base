@@ -18,6 +18,69 @@
 - 价格字段统一使用字符串，避免金额精度丢失。
 - 价格字符串不包含货币符号、千分位分隔符或单位。
 
+## SQLite 数据库规范
+
+### 数据库职责
+
+产品信息模块必须维护一个 SQLite 数据库，用于记录产品信息 Markdown 文档与产品报告 Markdown 文档之间的关系。
+
+数据库只保存索引关系和文件定位信息，不保存完整产品详情。完整产品详情仍以产品信息 Markdown 文档和原始输入数据为准。
+
+### 数据库配置
+
+| 配置项 | 类型 | 必填 | 默认值 | 说明 |
+| --- | --- | --- | --- | --- |
+| `sqlite_database_path` | `str` | 是 | `app/module/product_info/product_info.sqlite3` | 产品信息模块 SQLite 数据库路径。相对路径以项目根目录为基准解析。 |
+
+### 初始化脚本
+
+项目初始化或首次使用产品信息模块前，必须执行数据库初始化脚本：
+
+```bash
+python3 -m app.module.product_info.init_database
+```
+
+初始化脚本必须具备幂等性；重复执行不得删除已有产品信息和产品报告记录。
+
+### `product_info_document`
+
+产品信息文档索引表用于记录每个 `productCode` 对应的产品信息 Markdown 文件。
+
+| 字段 | 类型 | 约束 | 说明 |
+| --- | --- | --- | --- |
+| `id` | `INTEGER` | 主键，自增 | 产品信息数据库内部 ID。 |
+| `product_code` | `TEXT` | 必填，唯一 | 商品编码，对应输入字段 `productCode`。 |
+| `product_name_zh` | `TEXT` | 必填 | 中文产品名，对应输入字段 `productNameZh`。 |
+| `info_file_name` | `TEXT` | 必填 | 产品信息 Markdown 文件名。 |
+| `info_file_path` | `TEXT` | 必填，唯一 | 产品信息 Markdown 文件路径，建议使用项目相对路径。 |
+| `product_created_at` | `TEXT` | 必填 | 产品信息创建时间，对应输入字段 `createdAt`。 |
+| `created_at` | `TEXT` | 必填 | 数据库记录创建时间。 |
+| `updated_at` | `TEXT` | 必填 | 数据库记录更新时间。 |
+
+### `product_report_document`
+
+产品报告索引表用于记录每个产品信息下已经生成的产品报告。
+
+| 字段 | 类型 | 约束 | 说明 |
+| --- | --- | --- | --- |
+| `id` | `INTEGER` | 主键，自增 | 产品报告数据库内部 ID。 |
+| `product_info_id` | `INTEGER` | 必填，外键 | 关联 `product_info_document.id`，删除产品信息记录时级联删除报告索引。 |
+| `product_code` | `TEXT` | 必填 | 冗余商品编码，便于通过 `productCode` 查询报告。 |
+| `report_no` | `INTEGER` | 必填，大于 0 | 产品报告序号，对应文件名中的 `{序号}`。 |
+| `product_name_zh_snapshot` | `TEXT` | 必填 | 报告生成时的中文产品名快照。 |
+| `report_file_name` | `TEXT` | 必填 | 产品报告 Markdown 文件名。 |
+| `report_file_path` | `TEXT` | 必填，唯一 | 产品报告 Markdown 文件路径，建议使用项目相对路径。 |
+| `created_at` | `TEXT` | 必填 | 数据库记录创建时间。 |
+| `updated_at` | `TEXT` | 必填 | 数据库记录更新时间。 |
+
+### 关系约束
+
+1. `product_info_document.product_code` 必须唯一。
+2. `product_report_document.product_info_id` 必须关联已存在的产品信息记录。
+3. 同一个 `product_info_id` 下的 `report_no` 必须唯一。
+4. `product_report_document.report_file_path` 必须唯一。
+5. 创建产品报告前，必须先通过 `productCode` 匹配到产品信息记录；匹配失败时不得生成产品报告。
+
 ## 产品信息文档输入规范
 
 ### 输入根对象
@@ -191,6 +254,8 @@
 4. 输入中不存在的数据不应在输出文档中虚构。
 5. 输出文档中如需保留无法确认的信息，应使用 `待确认`。
 6. 输出文件名必须为 `{productNameZh}.md`。
+7. 产品信息 Markdown 文件创建成功后，必须向 `product_info_document` 写入或更新记录。
+8. 数据库记录中的 `product_code`、`product_name_zh`、`info_file_name`、`info_file_path`、`product_created_at` 必须与本次创建结果保持一致。
 
 ## 产品报告输入规范
 
@@ -232,7 +297,7 @@
 4. 一个 Markdown 文档只表达一个产品报告主题。
 5. 输出文件名必须使用通过 `productCode` 解析得到的中文产品名称。
 6. 输出文件名格式必须为 `{中文产品名称}-信息报告-{序号}.md`，例如 `智能桌面种植机-信息报告-1.md`。
-7. `序号` 使用正整数；同一中文产品名称已有报告时，取当前最大序号加 1；没有已有报告时使用 `1`。
+7. `序号` 使用正整数；同一产品已有报告时，取 `product_report_document` 中当前最大 `report_no` 加 1；没有已有报告时使用 `1`。
 8. 本模块的文件命名规则以中文产品名称和报告序号为准，覆盖通用 Markdown 规范中的英文文件名建议。
 9. 正文只允许使用标题、段落、代码块、无序列表、有序列表、嵌套列表、表格、链接引用定义、引用、Frontmatter、任务列表等规范支持的 Markdown 块。
 10. 标题、段落、列表、代码块、表格、引用之间必须使用一个空行分隔。
@@ -249,3 +314,5 @@
 5. 输入或产品信息中不存在的数据不应在输出文档中虚构。
 6. 输出文档中如需保留无法确认的信息，应使用 `待确认`。
 7. 输出文件名必须为 `{中文产品名称}-信息报告-{序号}.md`。
+8. 产品报告 Markdown 文件创建成功后，必须向 `product_report_document` 写入记录。
+9. 数据库记录中的 `product_code`、`report_no`、`report_file_name`、`report_file_path` 必须与本次创建结果保持一致。

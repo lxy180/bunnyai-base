@@ -7,8 +7,9 @@
 | 模块 | 说明 | 主要文件 |
 | --- | --- | --- |
 | `ai_cli` | AI CLI 统一调用入口，用于对接 Claude Code、Codex CLI、Gemini CLI 等命令行 AI 工具。 | `README.md`、`config.json`、`function-parameter-response-standard.md` |
+| `hot_item_analysis` | 分析爆款模块，用于分析已有爆款视频，并在成功后写入知识库 Markdown。 | `README.md`、`config.json`、`function-parameter-response-standard.md` |
 | `hot_item_collection` | 爆款采集模块，用于承载爆款商品、爆款内容或爆款线索的采集相关能力。 | `README.md`、`config.json`、`function-parameter-response-standard.md` |
-| `product_info` | 产品信息模块，用于定义产品信息文档和产品报告的功能参数输入与响应规范。 | `config.json`、`function-parameter-response-standard.md` |
+| `product_info` | 产品信息模块，用于定义产品信息文档和产品报告的功能参数输入与响应规范，并维护产品信息与产品报告的 SQLite 索引关系。 | `config.json`、`function-parameter-response-standard.md`、`database.py`、`init_database.py` |
 
 ## 通用约定
 

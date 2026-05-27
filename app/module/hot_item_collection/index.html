@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>爆款采集控制台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --line: #d8dde6;
+      --text: #18212f;
+      --muted: #637083;
+      --primary: #1463ff;
+      --ok: #11845b;
+      --bad: #c7372f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 { font-size: 18px; margin: 0; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 14px;
+      padding: 14px;
+      height: calc(100vh - 56px);
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .stack { display: grid; gap: 14px; min-height: 0; grid-template-rows: 1fr 1fr; }
+    .section-head {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    h2 { font-size: 15px; margin: 0; }
+    button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+    button:disabled { opacity: .55; cursor: wait; }
+    textarea {
+      width: 100%;
+      height: calc(100% - 118px);
+      min-height: 360px;
+      resize: none;
+      border: 0;
+      padding: 12px;
+      font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+      line-height: 1.55;
+      outline: none;
+    }
+    .category-picker {
+      display: grid;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+      position: relative;
+    }
+    .category-input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    .category-search {
+      width: 100%;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    .category-panel {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      height: 240px;
+      overflow: hidden;
+    }
+    .category-column {
+      min-width: 0;
+      height: 240px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border-right: 1px solid var(--line);
+      -webkit-overflow-scrolling: touch;
+    }
+    .category-column:last-child { border-right: 0; }
+    .category-option {
+      width: 100%;
+      height: 30px;
+      border: 0;
+      border-radius: 0;
+      padding: 0 8px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #fff;
+    }
+    .category-option:hover,
+    .category-option.active {
+      background: #eef4ff;
+      color: var(--primary);
+    }
+    .category-results {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      max-height: 240px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .category-result {
+      width: 100%;
+      min-height: 32px;
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      text-align: left;
+      padding: 7px 10px;
+      background: #fff;
+      line-height: 1.35;
+    }
+    .category-result:hover {
+      background: #eef4ff;
+      color: var(--primary);
+    }
+    .list {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      overflow: auto;
+      height: calc(100% - 42px);
+      align-content: start;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 650;
+    }
+    .muted { color: var(--muted); font-size: 12px; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      min-height: 0;
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      overflow: auto;
+      height: calc(100% - 42px);
+      min-height: 220px;
+      font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    .status-completed { color: var(--ok); }
+    .status-failed { color: var(--bad); }
+    .status-running { color: var(--primary); }
+    .artifact-card { cursor: pointer; transition: border-color .2s; }
+    .artifact-card:hover { border-color: var(--primary); }
+    .artifact-preview { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+    .csv-table { border-collapse: collapse; font-size: 11px; width: 100%; }
+    .csv-table th, .csv-table td { border: 1px solid var(--line); padding: 4px 8px; white-space: nowrap; text-align: left; }
+    .csv-table th { background: #f2f4f8; position: sticky; top: 0; z-index: 1; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; height: auto; }
+      textarea, pre { height: 360px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>爆款采集控制台</h1>
+    <button id="refreshBtn">刷新</button>
+  </header>
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>配置</h2>
+        <button class="primary" id="saveConfigBtn">保存配置</button>
+      </div>
+      <div class="category-picker">
+        <div class="muted">FastMoss 分类</div>
+        <div class="category-input">
+          <input class="category-search" id="categorySearch" placeholder="搜索或选择分类" autocomplete="off">
+          <button id="clearCategoryBtn">清空</button>
+        </div>
+        <div id="categoryPicker"></div>
+      </div>
+      <textarea id="configText" spellcheck="false"></textarea>
+    </section>
+    <div class="stack">
+      <div class="grid-2">
+        <section>
+          <div class="section-head"><h2>操作</h2></div>
+          <div class="list" id="actions"></div>
+        </section>
+        <section>
+          <div class="section-head"><h2>任务</h2></div>
+          <div class="list" id="tasks"></div>
+        </section>
+      </div>
+      <div class="grid-2">
+        <section>
+          <div class="section-head"><h2>任务日志</h2></div>
+          <pre id="logs">暂无任务日志</pre>
+        </section>
+        <section>
+          <div class="section-head"><h2>产物</h2></div>
+          <div class="list" id="artifacts"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script>
+    let selectedTaskId = null;
+    let categoryTree = [];
+    let categoryPath = [];
+    let categorySearchText = '';
+
+    async function api(path, options) {
+      const response = await fetch(path, options);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || '请求失败');
+      return data;
+    }
+
+    async function loadConfig() {
+      const [config, categoryData] = await Promise.all([
+        api('/api/config'),
+        api('/api/category-config')
+      ]);
+      categoryTree = categoryData.categories || [];
+      document.querySelector('#configText').value = JSON.stringify(config, null, 2);
+      renderCategoryPicker(config.hot_collection?.category_path || []);
+    }
+
+    function findCategoryNode(nodes, name) {
+      return (nodes || []).find(item => item.c_name === name);
+    }
+
+    function categoryOptions(nodes, selected, placeholder) {
+      if (!nodes || nodes.length === 0) return `<div class="muted" style="padding:8px;">${placeholder}</div>`;
+      return nodes.map(item => {
+        const name = item.c_name || '';
+        const active = name === selected ? ' active' : '';
+        const suffix = item.sub && item.sub.length ? '<span>›</span>' : '';
+        return `<button class="category-option${active}" data-name="${escapeHtml(name)}">${escapeHtml(name)}${suffix}</button>`;
+      }).join('');
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function renderCategoryPicker(path) {
+      categoryPath = Array.isArray(path) ? path.slice(0, 3) : [];
+      const selectedPath = categoryPath;
+      document.querySelector('#categorySearch').value = categorySearchText || selectedPath.join(' / ');
+      const firstNode = findCategoryNode(categoryTree, selectedPath[0]);
+      const secondNodes = firstNode?.sub || [];
+      const secondNode = findCategoryNode(secondNodes, selectedPath[1]);
+      const thirdNodes = secondNode?.sub || [];
+      const root = document.querySelector('#categoryPicker');
+      if (categorySearchText.trim()) {
+        renderCategorySearchResults(root, categorySearchText.trim());
+        return;
+      }
+      root.innerHTML = `
+        <div class="category-panel">
+          <div class="category-column" data-level="0">${categoryOptions(categoryTree, selectedPath[0], '暂无一级分类')}</div>
+          <div class="category-column" data-level="1">${categoryOptions(secondNodes, selectedPath[1], '请选择一级分类')}</div>
+          <div class="category-column" data-level="2">${categoryOptions(thirdNodes, selectedPath[2], '请选择二级分类')}</div>
+        </div>
+      `;
+      root.querySelectorAll('.category-option').forEach(button => {
+        button.onclick = () => {
+          const level = Number(button.closest('.category-column').dataset.level);
+          const values = selectedPath.slice(0, level);
+          values[level] = button.dataset.name;
+          categorySearchText = '';
+          updateCategoryPath(values);
+          renderCategoryPicker(values);
+        };
+      });
+    }
+
+    function flattenCategoryPaths(nodes, prefix = []) {
+      return (nodes || []).flatMap(item => {
+        const path = [...prefix, item.c_name].filter(Boolean).slice(0, 3);
+        const children = item.sub && path.length < 3 ? flattenCategoryPaths(item.sub, path) : [];
+        return children.length ? children : [path];
+      });
+    }
+
+    function renderCategorySearchResults(root, keyword) {
+      const lowerKeyword = keyword.toLowerCase();
+      const results = flattenCategoryPaths(categoryTree)
+        .filter(path => path.join(' / ').toLowerCase().includes(lowerKeyword))
+        .slice(0, 80);
+      root.innerHTML = `
+        <div class="category-results">
+          ${results.length ? results.map(path => `<button class="category-result" data-path="${escapeHtml(JSON.stringify(path))}">${escapeHtml(path.join(' / '))}</button>`).join('') : '<div class="muted" style="padding:8px;">没有匹配分类</div>'}
+        </div>
+      `;
+      root.querySelectorAll('.category-result').forEach(button => {
+        button.onclick = () => {
+          const path = JSON.parse(button.dataset.path);
+          categorySearchText = '';
+          updateCategoryPath(path);
+          renderCategoryPicker(path);
+        };
+      });
+    }
+
+    function updateCategoryPath(path) {
+      const config = JSON.parse(document.querySelector('#configText').value || '{}');
+      config.hot_collection = config.hot_collection || {};
+      config.hot_collection.category_path = path.slice(0, 3);
+      document.querySelector('#configText').value = JSON.stringify(config, null, 2);
+    }
+
+    async function saveConfig() {
+      const button = document.querySelector('#saveConfigBtn');
+      button.disabled = true;
+      try {
+        const payload = JSON.parse(document.querySelector('#configText').value);
+        await api('/api/config', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        await loadAll();
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function loadActions() {
+      const data = await api('/api/actions');
+      const root = document.querySelector('#actions');
+      root.innerHTML = '';
+      data.actions.forEach(action => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
+          <div class="card-title">
+            <span>${action.title}</span>
+            <button class="primary">启动</button>
+          </div>
+          <div class="muted">${action.description}</div>
+          <div class="muted">输出：${action.outputHint}</div>
+        `;
+        el.querySelector('button').onclick = () => runAction(action.id);
+        root.appendChild(el);
+      });
+    }
+
+    async function runAction(actionId) {
+      const config = JSON.parse(document.querySelector('#configText').value || '{}');
+      const task = await api(`/api/actions/${actionId}/run`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({config})
+      });
+      selectedTaskId = task.taskId;
+      await loadTasks();
+    }
+
+    async function loadTasks() {
+      const data = await api('/api/tasks');
+      const root = document.querySelector('#tasks');
+      root.innerHTML = '';
+      data.tasks.forEach(task => {
+        const el = document.createElement('button');
+        el.className = 'card';
+        el.innerHTML = `
+          <div class="card-title">
+            <span>${task.actionTitle}</span>
+            <span class="status-${task.status}">${task.status}</span>
+          </div>
+          <div class="muted">${task.createdAt}</div>
+        `;
+        el.onclick = () => {
+          selectedTaskId = task.taskId;
+          renderLogs(task);
+        };
+        root.appendChild(el);
+      });
+      const selected = data.tasks.find(task => task.taskId === selectedTaskId) || data.tasks[0];
+      if (selected) {
+        selectedTaskId = selected.taskId;
+        renderLogs(selected);
+      }
+    }
+
+    function renderLogs(task) {
+      document.querySelector('#logs').textContent = [
+        `${task.actionTitle} / ${task.status}`,
+        `命令：${task.command.join(' ')}`,
+        '',
+        ...(task.logs || [])
+      ].join('\n');
+    }
+
+    async function loadArtifacts() {
+      const data = await api('/api/artifacts');
+      const root = document.querySelector('#artifacts');
+      const roots = (data.outputRoots || []).map(item => `${item.name}: ${item.path}`).join('<br>');
+      root.innerHTML = `<div class="muted">输出目录：<br>${roots}</div>`;
+      const filtered = data.files.filter(f => f.kind === 'csv' || f.kind === 'video');
+      filtered.forEach(file => {
+        const el = document.createElement('div');
+        el.className = 'card artifact-card';
+        el.innerHTML = `
+          <div class="card-title"><span>${escapeHtml(file.path)}</span><span class="muted">${file.kind}</span></div>
+          <div class="muted">${formatFileSize(file.size)} · ${file.modifiedAt}</div>
+          <div class="artifact-preview" style="display:none;"></div>
+        `;
+        el.style.cursor = 'pointer';
+        el.onclick = async () => {
+          const preview = el.querySelector('.artifact-preview');
+          if (preview.style.display !== 'none') {
+            preview.style.display = 'none';
+            preview.innerHTML = '';
+            return;
+          }
+          root.querySelectorAll('.artifact-preview').forEach(p => {
+            p.style.display = 'none';
+            p.innerHTML = '';
+          });
+          preview.style.display = 'block';
+          if (file.kind === 'video') {
+            const videoUrl = '/api/artifacts/video?path=' + encodeURIComponent(file.path);
+            preview.innerHTML = `<video controls preload="metadata" style="max-width:100%;max-height:300px;border-radius:6px;" src="${videoUrl}"></video>`;
+          } else if (file.kind === 'csv') {
+            try {
+              const resp = await api('/api/artifacts/read?path=' + encodeURIComponent(file.path));
+              preview.innerHTML = renderCsvTable(resp.content);
+            } catch (err) {
+              preview.innerHTML = `<div class="muted">预览失败：${escapeHtml(err.message)}</div>`;
+            }
+          }
+        };
+        root.appendChild(el);
+      });
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+      if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return bytes + ' B';
+    }
+
+    function parseCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+          if (ch === '"') {
+            if (i + 1 < line.length && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            current += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            result.push(current);
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    function renderCsvTable(csvText) {
+      const lines = csvText.trim().split('\n');
+      if (lines.length === 0) return '<div class="muted">空文件</div>';
+      const maxRows = 50;
+      const rows = lines.slice(0, maxRows);
+      const headers = parseCsvLine(rows[0]);
+      let html = '<div style="overflow:auto;max-height:300px;"><table class="csv-table">';
+      html += '<thead><tr>' + headers.map(h => '<th>' + escapeHtml(h) + '</th>').join('') + '</tr></thead>';
+      html += '<tbody>';
+      for (let i = 1; i < rows.length; i++) {
+        const cells = parseCsvLine(rows[i]);
+        html += '<tr>' + cells.map(c => '<td>' + escapeHtml(c) + '</td>').join('') + '</tr>';
+      }
+      html += '</tbody></table></div>';
+      if (lines.length > maxRows) html += '<div class="muted" style="margin-top:6px;">仅显示前 ' + maxRows + ' 行（共 ' + lines.length + ' 行）</div>';
+      return html;
+    }
+
+    async function loadAll() {
+      await Promise.all([loadConfig(), loadActions(), loadTasks(), loadArtifacts()]);
+    }
+
+    document.querySelector('#saveConfigBtn').onclick = saveConfig;
+    document.querySelector('#refreshBtn').onclick = loadAll;
+    document.querySelector('#categorySearch').oninput = event => {
+      categorySearchText = event.target.value.trim() === categoryPath.join(' / ') ? '' : event.target.value;
+      renderCategoryPicker(categoryPath);
+    };
+    document.querySelector('#categorySearch').onfocus = () => renderCategoryPicker(categoryPath);
+    document.querySelector('#clearCategoryBtn').onclick = () => {
+      categorySearchText = '';
+      updateCategoryPath([]);
+      renderCategoryPicker([]);
+    };
+    loadAll();
+    setInterval(loadTasks, 3000);
+  </script>
+</body>
+</html>

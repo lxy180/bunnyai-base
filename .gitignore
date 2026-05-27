@@ -38,3 +38,8 @@ htmlcov/
 app/result/
 dist/
 build/
+
+# 爆款采集本地浏览器状态与诊断文件
+app/module/hot_item_collection/browser-profile/
+app/module/hot_item_collection/runtime_state/
+app/module/hot_item_collection/diagnostics/
