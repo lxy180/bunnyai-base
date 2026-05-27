@@ -8,7 +8,7 @@
 
 ## 基本约定
 
-- 脚本入口不接收命令行输入参数，运行参数从 `config.json` 或环境变量读取。
+- 脚本入口不接收命令行输入参数，运行参数从模块 `config.json` 读取。
 - Web 控制台接口统一使用 JSON 请求与 JSON 响应。
 - 响应必须符合调用方约定的数据格式或文档格式。
 - 字段名使用英文驼峰命名，并与本规范保持一致。
@@ -21,7 +21,7 @@
 
 ### 脚本输入参数
 
-采集、下载、登录和流水线脚本不接收位置参数。FastMoss 账号可以来自配置字段 `hot_collection.phone`、`hot_collection.password`，也可以来自环境变量 `FASTMOSS_PHONE`、`FASTMOSS_PASSWORD`。
+采集、下载、登录和流水线脚本不接收位置参数。FastMoss 账号来自模块 `config.json` 中的 `login_params.phone` 和 `login_params.password`。
 
 ### Web 配置参数
 
@@ -29,17 +29,17 @@
 
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
-| `config_schema_version` | `number` | 否 | `2` | 配置结构版本。 |
-| `hot_collection.phone` | `string` | 否 | `""` | FastMoss 手机号，也可用环境变量覆盖。 |
-| `hot_collection.password` | `string` | 否 | `""` | FastMoss 密码，也可用环境变量覆盖。 |
-| `hot_collection.keyword` | `string` | 否 | `""` | 商品搜索关键词。 |
-| `hot_collection.country` | `string` | 否 | `"马来西亚"` | 国家或地区筛选。 |
-| `hot_collection.category_path` | `array` | 否 | `[]` | FastMoss 类目路径，最多保留三级。 |
-| `hot_collection.product_limit` | `number` | 否 | `3` | 采集商品数量。 |
-| `hot_collection.videos_per_product` | `number` | 否 | `20` | 每个商品采集的视频数量。 |
-| `hot_collection.show_browser` | `boolean` | 否 | `false` | 是否显示浏览器窗口。 |
-| `hot_collection.csv_output_dir` | `string` | 否 | `""` | CSV 输出目录；空值使用默认目录。 |
-| `hot_collection.video_output_dir` | `string` | 否 | `""` | 视频输出目录；空值使用默认目录。 |
+| `show_browser` | `boolean` | 否 | `false` | 是否显示浏览器窗口。 |
+| `category_config_path` | `string` | 否 | `"app/tools/fastmoss_category_config.json"` | FastMoss 分类数据源 JSON 文件路径，支持绝对路径和相对项目根目录路径。 |
+| `login_params.phone` | `string` | 否 | `""` | FastMoss 手机号。 |
+| `login_params.password` | `string` | 否 | `""` | FastMoss 密码。 |
+| `filter_condition.category_path` | `array` | 否 | `[]` | FastMoss 类目路径，最多保留三级。 |
+| `filter_condition.keyword` | `string` | 否 | `""` | 商品搜索关键词。 |
+| `filter_condition.country` | `string` | 否 | `"马来西亚"` | 国家或地区筛选。 |
+| `filter_condition.product_limit` | `number` | 否 | `3` | 采集商品数量。 |
+| `filter_condition.videos_per_product` | `number` | 否 | `20` | 每个商品采集的视频数量。 |
+| `result_path.csv_output_dir` | `string` | 否 | `""` | CSV 输出目录；空值使用默认目录。 |
+| `result_path.video_output_dir` | `string` | 否 | `""` | 视频输出目录；空值使用默认目录。 |
 
 ### 输入校验规则
 

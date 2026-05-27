@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
+
+from app.tools.id_generator import generate_id
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -14,7 +17,7 @@ DEFAULT_DATABASE_PATH = MODULE_DIR / "product_info.sqlite3"
 SCHEMA_STATEMENTS = [
     """
     CREATE TABLE IF NOT EXISTS product_info_document (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         product_code TEXT NOT NULL UNIQUE,
         product_name_zh TEXT NOT NULL,
         info_file_name TEXT NOT NULL,
@@ -26,7 +29,7 @@ SCHEMA_STATEMENTS = [
     """,
     """
     CREATE TABLE IF NOT EXISTS product_report_document (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         product_info_id INTEGER NOT NULL,
         product_code TEXT NOT NULL,
         report_no INTEGER NOT NULL CHECK (report_no > 0),
@@ -76,10 +79,14 @@ def initialize_database(db_path=None):
     database_path = resolve_database_path(db_path)
     database_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
+        if _uses_autoincrement_id(connection):
+            _migrate_autoincrement_schema(connection)
         for statement in SCHEMA_STATEMENTS:
             connection.execute(statement)
+        connection.commit()
 
     return database_path
 
@@ -101,11 +108,12 @@ def record_product_info_document(
     product_created_at = _require_text(product_created_at, "createdAt")
     now_text = _now_text()
 
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute(
             """
             INSERT INTO product_info_document (
+                id,
                 product_code,
                 product_name_zh,
                 info_file_name,
@@ -114,7 +122,7 @@ def record_product_info_document(
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(product_code) DO UPDATE SET
                 product_name_zh = excluded.product_name_zh,
                 info_file_name = excluded.info_file_name,
@@ -123,6 +131,7 @@ def record_product_info_document(
                 updated_at = excluded.updated_at
             """,
             (
+                generate_id(),
                 product_code,
                 product_name_zh,
                 info_file_name,
@@ -136,6 +145,7 @@ def record_product_info_document(
             "SELECT id FROM product_info_document WHERE product_code = ?",
             (product_code,),
         ).fetchone()
+        connection.commit()
 
     return row[0]
 
@@ -152,7 +162,7 @@ def record_product_report_document(
     report_file_name = Path(report_file_path).name
     now_text = _now_text()
 
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("BEGIN IMMEDIATE")
         product_row = connection.execute(
@@ -180,6 +190,7 @@ def record_product_report_document(
         connection.execute(
             """
             INSERT INTO product_report_document (
+                id,
                 product_info_id,
                 product_code,
                 report_no,
@@ -189,9 +200,10 @@ def record_product_report_document(
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                generate_id(),
                 product_info_id,
                 product_code,
                 report_no,
@@ -202,8 +214,107 @@ def record_product_report_document(
                 now_text,
             ),
         )
+        connection.commit()
 
     return report_no
+
+
+def _uses_autoincrement_id(connection):
+    for table_name in ["product_info_document", "product_report_document"]:
+        row = connection.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (table_name,),
+        ).fetchone()
+        if row is not None and "AUTOINCREMENT" in row["sql"].upper():
+            return True
+    return False
+
+
+def _migrate_autoincrement_schema(connection):
+    products = _fetch_existing_rows(connection, "product_info_document")
+    reports = _fetch_existing_rows(connection, "product_report_document")
+
+    connection.commit()
+    connection.execute("PRAGMA foreign_keys = OFF")
+    connection.execute("DROP TABLE IF EXISTS product_report_document")
+    connection.execute("DROP TABLE IF EXISTS product_info_document")
+    for statement in SCHEMA_STATEMENTS:
+        connection.execute(statement)
+
+    product_id_map = {}
+    for product in products:
+        new_id = generate_id()
+        product_id_map[product["id"]] = new_id
+        connection.execute(
+            """
+            INSERT INTO product_info_document (
+                id,
+                product_code,
+                product_name_zh,
+                info_file_name,
+                info_file_path,
+                product_created_at,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                new_id,
+                product["product_code"],
+                product["product_name_zh"],
+                product["info_file_name"],
+                product["info_file_path"],
+                product["product_created_at"],
+                product["created_at"],
+                product["updated_at"],
+            ),
+        )
+
+    for report in reports:
+        new_product_info_id = product_id_map.get(report["product_info_id"])
+        if new_product_info_id is None:
+            continue
+        connection.execute(
+            """
+            INSERT INTO product_report_document (
+                id,
+                product_info_id,
+                product_code,
+                report_no,
+                product_name_zh_snapshot,
+                report_file_name,
+                report_file_path,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                generate_id(),
+                new_product_info_id,
+                report["product_code"],
+                report["report_no"],
+                report["product_name_zh_snapshot"],
+                report["report_file_name"],
+                report["report_file_path"],
+                report["created_at"],
+                report["updated_at"],
+            ),
+        )
+
+    connection.commit()
+    connection.execute("PRAGMA foreign_keys = ON")
+
+
+def _fetch_existing_rows(connection, table_name):
+    exists = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    if exists is None:
+        return []
+    return list(connection.execute(f"SELECT * FROM {table_name}"))
 
 
 def _now_text():

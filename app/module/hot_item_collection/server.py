@@ -17,12 +17,13 @@ from typing import Any, Callable
 from urllib.parse import parse_qs, urlparse
 
 from .config_store import group_config, load_app_config, save_app_config
-from .project_assets import csv_output_dir, project_relative, video_output_dir
+from .project_assets import csv_output_dir, project_relative, resolve_config_path_value, video_output_dir
 
 
 ROOT = Path(__file__).resolve().parents[3]
 INDEX_HTML = Path(__file__).with_name("index.html")
-CATEGORY_CONFIG_JSON = Path(__file__).with_name("fastmoss_category_config.json")
+DEFAULT_CATEGORY_CONFIG_JSON = ROOT / "app" / "tools" / "fastmoss_category_config.json"
+DEFAULT_CATEGORY_CONFIG_PATH = "app/tools/fastmoss_category_config.json"
 DEFAULT_PORT = 8081
 
 
@@ -151,13 +152,19 @@ def list_actions() -> list[dict[str, str]]:
 
 
 def load_grouped_config() -> dict[str, Any]:
-    return group_config(load_app_config())
+    return group_config(load_app_config({"category_config_path": DEFAULT_CATEGORY_CONFIG_PATH}))
 
 
-def load_category_config() -> list[dict[str, Any]]:
-    if not CATEGORY_CONFIG_JSON.exists():
+def category_config_path(config: dict[str, Any] | None = None) -> Path:
+    config = config or load_app_config({"category_config_path": DEFAULT_CATEGORY_CONFIG_PATH})
+    return resolve_config_path_value(config.get("category_config_path"), DEFAULT_CATEGORY_CONFIG_JSON)
+
+
+def load_category_config(config: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    path = category_config_path(config)
+    if not path.exists():
         return []
-    data = json.loads(CATEGORY_CONFIG_JSON.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
     return data if isinstance(data, list) else []
 
 
@@ -170,15 +177,15 @@ def _normalize_config_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(payload, dict):
         return {}
     normalized = dict(payload)
-    hot_collection = normalized.get("hot_collection")
-    if isinstance(hot_collection, dict) and "category_path" in hot_collection:
-        normalized_hot_collection = dict(hot_collection)
-        category_path = normalized_hot_collection.get("category_path")
+    filter_condition = normalized.get("filter_condition")
+    if isinstance(filter_condition, dict) and "category_path" in filter_condition:
+        normalized_filter_condition = dict(filter_condition)
+        category_path = normalized_filter_condition.get("category_path")
         if isinstance(category_path, list):
-            normalized_hot_collection["category_path"] = [str(item).strip() for item in category_path if str(item).strip()][:3]
+            normalized_filter_condition["category_path"] = [str(item).strip() for item in category_path if str(item).strip()][:3]
         else:
-            normalized_hot_collection["category_path"] = []
-        normalized["hot_collection"] = normalized_hot_collection
+            normalized_filter_condition["category_path"] = []
+        normalized["filter_condition"] = normalized_filter_condition
     return normalized
 
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import json
-import os
 import time
 from datetime import datetime
 
@@ -18,9 +17,8 @@ LOGIN_URL = "https://www.fastmoss.com/zh/dashboard"
 
 
 def resolve_login_credentials():
-    collection_config = CONFIG.get("hot_collection", {}) if isinstance(CONFIG.get("hot_collection"), dict) else {}
-    phone = os.environ.get("FASTMOSS_PHONE") or CONFIG.get("phone") or collection_config.get("phone")
-    password = os.environ.get("FASTMOSS_PASSWORD") or CONFIG.get("password") or collection_config.get("password")
+    phone = CONFIG.get("phone")
+    password = CONFIG.get("password")
     return str(phone or "").strip(), str(password or "").strip()
 
 
@@ -90,7 +88,7 @@ def close_entry_popup(page):
 def main():
     phone, password = resolve_login_credentials()
     if not phone or not password:
-        raise SystemExit("请先在配置 hot_collection.phone 和 hot_collection.password 中填写 FastMoss 账号密码")
+        raise SystemExit("请先在模块 config.json 的 login_params.phone 和 login_params.password 中填写 FastMoss 账号密码")
 
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     STORAGE_STATE.parent.mkdir(parents=True, exist_ok=True)

@@ -1,15 +1,18 @@
 {
-  "config_schema_version": 2,
-  "hot_collection": {
+  "show_browser": false,
+  "category_config_path": "app/tools/fastmoss_category_config.json",
+  "login_params": {
     "phone": "",
-    "password": "",
-    "keyword": "",
-    "country": "马来西亚",
+    "password": ""
+  },
+  "filter_condition": {
     "category_path": [
       "美妆个护",
       "头部护理与造型",
       "染发用品"
     ],
+    "keyword": "",
+    "country": "马来西亚",
     "shop_type": "全部",
     "product_types": [],
     "product_status": "在售",
@@ -22,8 +25,9 @@
     "commission_rate_filter": "全部",
     "shipping_method_filter": "全部",
     "product_limit": 1,
-    "videos_per_product": 1,
-    "show_browser": false,
+    "videos_per_product": 1
+  },
+  "result_path": {
     "csv_output_dir": "",
     "video_output_dir": ""
   }

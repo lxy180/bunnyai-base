@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import csv
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -30,8 +29,8 @@ SEARCH_URL = "https://www.fastmoss.com/zh/e-commerce/search"
 
 def load_config():
     defaults = {
-        "phone": os.environ.get("FASTMOSS_PHONE", ""),
-        "password": os.environ.get("FASTMOSS_PASSWORD", ""),
+        "phone": "",
+        "password": "",
         "keyword": "",
         "country": "马来西亚",
         "category_path": ["美妆个护", "头部护理与造型", "染发用品"],
@@ -82,10 +81,6 @@ PRODUCT_LIMIT = int(CONFIG.get("product_limit", 3))
 VIDEOS_PER_PRODUCT = int(CONFIG.get("videos_per_product", 20))
 SHOW_BROWSER = bool(CONFIG.get("show_browser", False))
 PROFILE_DIR = fastmoss_profile_dir(CONFIG)
-if CONFIG.get("phone"):
-    os.environ.setdefault("FASTMOSS_PHONE", CONFIG["phone"])
-if CONFIG.get("password"):
-    os.environ.setdefault("FASTMOSS_PASSWORD", CONFIG["password"])
 
 
 def log(message):
@@ -389,10 +384,10 @@ def ensure_logged_in(page, context):
     if "Restricted Access" in page_text or "security policy" in page_text:
         raise RuntimeError("页面访问被安全策略拦截。请勾选“显示浏览器窗口”完成一次验证后再试。")
 
-    phone = os.environ.get("FASTMOSS_PHONE")
-    password = os.environ.get("FASTMOSS_PASSWORD")
+    phone = str(CONFIG.get("phone") or "").strip()
+    password = str(CONFIG.get("password") or "").strip()
     if not phone or not password:
-        raise RuntimeError("登录态已失效，请设置 FASTMOSS_PHONE 和 FASTMOSS_PASSWORD 后重跑")
+        raise RuntimeError("登录态已失效，请先在模块 config.json 的 login_params.phone 和 login_params.password 中填写 FastMoss 账号密码")
 
     phone_input = page.get_by_placeholder("输入您的手机号")
     if visible_count(phone_input) == 0:

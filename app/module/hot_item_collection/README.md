@@ -31,14 +31,15 @@ app/module/hot_item_collection/restart_server.command --foreground
 | `collect_fastmoss_product_videos.py` | 采集 FastMoss 商品及关联视频。 |
 | `download_tiktok_videos_kolsprite.py` | 下载 TikTok 无水印视频。 |
 | `login_fastmoss_assisted.py` | 辅助刷新 FastMoss 登录态。 |
-| `config_store.py` | 读取、兼容和保存模块配置。 |
+| `config_store.py` | 读取和保存模块配置。 |
 | `project_assets.py` | 输出目录、运行态和文件命名工具。 |
 | `config.json` | 当前本地配置文件。 |
 | `config.example.json` | 可提交的配置示例，不包含账号密码。 |
-| `function-parameter-response-standard.md` | 模块功能参数输入与响应规范。 |
+| `standard.md` | 模块功能参数输入与响应规范。 |
 
 ## 输出与本地状态
 
 - CSV 和视频默认写入 `app/result/hot_item_collection/`。
 - 浏览器登录态、诊断截图和本地 profile 写入模块目录下的运行态目录，并已加入 `.gitignore`。
-- `config.json` 支持旧字段 `fastmoss_username`、`fastmoss_password` 和 `filter—condition`，保存后会按新分组结构输出。
+- FastMoss 分类数据源默认读取 `app/tools/fastmoss_category_config.json`，可通过顶层 `category_config_path` 改为其他 JSON 文件。
+- `config.json` 使用顶层配置 + `login_params`、`filter_condition`、`result_path` 分组结构。

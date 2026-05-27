@@ -285,7 +285,7 @@
       ]);
       categoryTree = categoryData.categories || [];
       document.querySelector('#configText').value = JSON.stringify(config, null, 2);
-      renderCategoryPicker(config.hot_collection?.category_path || []);
+      renderCategoryPicker(config.filter_condition?.category_path || []);
     }
 
     function findCategoryNode(nodes, name) {
@@ -372,8 +372,8 @@
 
     function updateCategoryPath(path) {
       const config = JSON.parse(document.querySelector('#configText').value || '{}');
-      config.hot_collection = config.hot_collection || {};
-      config.hot_collection.category_path = path.slice(0, 3);
+      config.filter_condition = config.filter_condition || {};
+      config.filter_condition.category_path = path.slice(0, 3);
       document.querySelector('#configText').value = JSON.stringify(config, null, 2);
     }
 

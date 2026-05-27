@@ -48,7 +48,7 @@ python3 -m app.module.product_info.init_database
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
-| `id` | `INTEGER` | 主键，自增 | 产品信息数据库内部 ID。 |
+| `id` | `INTEGER` | 主键 | 产品信息数据库内部 ID，必须调用 `app.tools.id_generator.generate_id()` 生成，不允许使用数据库自增 ID。 |
 | `product_code` | `TEXT` | 必填，唯一 | 商品编码，对应输入字段 `productCode`。 |
 | `product_name_zh` | `TEXT` | 必填 | 中文产品名，对应输入字段 `productNameZh`。 |
 | `info_file_name` | `TEXT` | 必填 | 产品信息 Markdown 文件名。 |
@@ -63,7 +63,7 @@ python3 -m app.module.product_info.init_database
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
-| `id` | `INTEGER` | 主键，自增 | 产品报告数据库内部 ID。 |
+| `id` | `INTEGER` | 主键 | 产品报告数据库内部 ID，必须调用 `app.tools.id_generator.generate_id()` 生成，不允许使用数据库自增 ID。 |
 | `product_info_id` | `INTEGER` | 必填，外键 | 关联 `product_info_document.id`，删除产品信息记录时级联删除报告索引。 |
 | `product_code` | `TEXT` | 必填 | 冗余商品编码，便于通过 `productCode` 查询报告。 |
 | `report_no` | `INTEGER` | 必填，大于 0 | 产品报告序号，对应文件名中的 `{序号}`。 |

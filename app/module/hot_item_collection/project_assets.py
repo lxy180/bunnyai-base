@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import hashlib
-import os
 import re
 from pathlib import Path
 
-from .config_store import CONFIG_PATH, LEGACY_CONFIG_PATH, load_app_config
+from .config_store import load_app_config
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -32,8 +31,7 @@ def safe_name(value, default="untitled", max_length=120):
 
 def config_value(config, key, default=""):
     config = config or load_config()
-    collection_config = config.get("hot_collection", {}) if isinstance(config.get("hot_collection"), dict) else {}
-    return config.get(key) or collection_config.get(key) or default
+    return config.get(key) or default
 
 
 def safe_profile_part(value):
@@ -42,14 +40,14 @@ def safe_profile_part(value):
 
 def fastmoss_profile_dir(config=None):
     config = config or load_config()
-    phone = os.environ.get("FASTMOSS_PHONE") or config_value(config, "phone")
+    phone = config_value(config, "phone")
     return BROWSER_PROFILE_DIR / "fastmoss" / safe_profile_part(phone)
 
 
 def fastmoss_account_signature(config=None):
     config = config or load_config()
-    phone = str(os.environ.get("FASTMOSS_PHONE") or config_value(config, "phone") or "").strip()
-    password = str(os.environ.get("FASTMOSS_PASSWORD") or config_value(config, "password") or "")
+    phone = str(config_value(config, "phone") or "").strip()
+    password = str(config_value(config, "password") or "")
     password_sha256 = hashlib.sha256(password.encode("utf-8")).hexdigest() if password else ""
     return {"phone": phone, "password_sha256": password_sha256}
 

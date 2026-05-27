@@ -1,6 +1,7 @@
 {
   "analysisCliProvider": "codex",
   "aiCliConfigPath": "app/module/ai_cli/config.json",
+  "databasePath": "app/module/hot_item_analysis/hot_item_analysis.sqlite3",
   "knowledgeOutputDirectory": "knowledge/分析爆款",
   "executionMode": "headless",
   "timeoutSeconds": 600

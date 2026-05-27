@@ -19,15 +19,15 @@
 | --- | --- |
 | `__init__.py` | 模块包入口，提供模块标识常量。 |
 | `config.json` | 模块运行配置，用于选择分析时使用的 AI CLI。 |
-| `function-parameter-response-standard.md` | 模块功能参数输入与响应规范。 |
+| `standard.md` | 模块功能参数输入与响应规范。 |
 
 ## 功能说明
 
 ### 分析已有爆款视频
 
-调用方提交爆款视频 ID 和本地爆款视频路径后，模块创建分析任务并返回任务状态。
+调用方提交来源关联 ID 和本地爆款视频路径后，模块创建分析任务并返回任务状态。
 
-分析任务执行时必须通过 `ai_cli` 模块调用配置中选择的本地 AI CLI。分析成功后，模块必须把分析结果写入以下目录：
+任务 ID 必须通过 `app/tools/id_generator` 的 ID 生成工具生成。分析任务执行时必须通过 `ai_cli` 模块调用配置中选择的本地 AI CLI。分析成功后，模块必须把分析结果写入以下目录：
 
 ```text
 /Users/lexiyue/software/bunnyai-base/knowledge/分析爆款
@@ -42,7 +42,7 @@
 
 ```json
 {
-  "hotVideoId": "video-001",
+  "sourceRelationId": "video-001",
   "localHotVideoPath": "/Users/lexiyue/software/bunnyai-base/app/result/hot_item_collection/videos/video-001.mp4"
 }
 ```
@@ -55,9 +55,16 @@
 | --- | --- |
 | `analysisCliProvider` | 分析视频时使用的 AI CLI，取值必须符合 `ai_cli` 模块支持的 `provider`。 |
 | `aiCliConfigPath` | `ai_cli` 模块配置文件路径。 |
+| `databasePath` | SQLite 数据库文件路径，用于记录分析任务与结果文件的关系。 |
 | `knowledgeOutputDirectory` | 分析结果 Markdown 写入目录。 |
 | `executionMode` | 调用 AI CLI 时使用的执行模式。 |
 | `timeoutSeconds` | 单次 AI CLI 调用超时时间，单位为秒。 |
+
+## 任务记录
+
+模块应使用 SQLite 数据库记录每次分析任务。任务记录至少包含来源关联 ID、任务 ID、任务状态、分析结果 Markdown 路径、使用的 AI CLI 和解析耗时。
+
+同一个来源关联 ID 可以对应多次分析任务，数据库不得对 `source_relation_id` 设置唯一约束。
 
 ## 输出文档要求
 
